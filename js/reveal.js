@@ -12,6 +12,7 @@ var Reveal = (function(){
 	var SLIDES_SELECTOR = '.reveal .slides section',
 		HORIZONTAL_SLIDES_SELECTOR = '.reveal .slides>section',
 		VERTICAL_SLIDES_SELECTOR = '.reveal .slides>section.present>section',
+		HOME_SLIDE_SELECTOR = '.reveal .slides>section:first-child',
 
 		// Configurations defaults, can be overridden at initialization time
 		config = {
@@ -492,8 +493,13 @@ var Reveal = (function(){
 				var node = nodes[i];
 
 				if( node.textContent && !node.querySelector( 'img' ) && ( !node.className || !node.classList.contains( node, 'roll' ) ) ) {
+                    var span = document.createElement('span');
+                    span.setAttribute('data-title', node.text);
+                    span.innerHTML = node.innerHTML;
+
 					node.classList.add( 'roll' );
-					node.innerHTML = '<span data-title="'+ node.text +'">' + node.innerHTML + '</span>';
+                    node.innerHTML = '';
+                    node.appendChild(span);
 				}
 			}
 		}
@@ -840,7 +846,7 @@ var Reveal = (function(){
 
 
 		// Show fragment, if specified
-		if( ( indexh !== indexhBefore || indexv !== indexvBefore ) && f ) {
+		if( typeof f !== 'undefined' ) {
 			var fragments = currentSlide.querySelectorAll( '.fragment' );
 
 			toArray( fragments ).forEach( function( fragment, indexf ) {
@@ -872,6 +878,21 @@ var Reveal = (function(){
 		// stacks
 		if( previousSlide ) {
 			previousSlide.classList.remove( 'present' );
+
+            // Reset all slides upon navigate to home
+            // Issue: #285
+            if ( document.querySelector( HOME_SLIDE_SELECTOR ).classList.contains( 'present' ) ) {
+                // Launch async task
+                setTimeout( function () {
+                    var slides = toArray( document.querySelectorAll( HORIZONTAL_SLIDES_SELECTOR + '.stack') ), i;
+                    for( i in slides ) {
+                        if( slides[i] ) {
+                            // Reset stack
+                            setPreviousVerticalIndex( slides[i], 0 );
+                        }
+                    }
+                }, 0 );
+            }
 		}
 
 		updateControls();
